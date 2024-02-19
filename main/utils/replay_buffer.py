@@ -9,11 +9,10 @@ class ReplayBuffer():
         self.state = np.zeros((memory_size,) + state_size, dtype=np.float32)
         self.next_state = np.zeros((memory_size,) + state_size, dtype=np.float32)
         self.action = np.zeros((memory_size,1), dtype=action_dtype)
-        self.next_action = np.zeros((memory_size,1) , dtype=action_dtype)
         self.reward = np.zeros((memory_size, 1), dtype=np.float32)
         self.done = np.zeros((memory_size, 1), dtype=int)
 
-    def add_memory(self, state, next_state, action, next_action, reward, done):
+    def add_memory(self, state, next_state, action, reward, done):
         i = self.counter % self.memory_size
 
         self.state[i] = np.array(state) \
@@ -22,8 +21,6 @@ class ReplayBuffer():
             if type(next_state) is list else next_state
         self.action[i] = np.array(action) \
             if type(action) is list else action
-        self.next_action[i] = np.array(next_action) \
-            if type(next_action) is list else next_action
         self.reward[i] = np.array(reward) \
             if type(reward) is list else reward
         self.done[i] = np.array(done) \
@@ -39,11 +36,10 @@ class ReplayBuffer():
         state = self.state[random_index]
         next_state = self.next_state[random_index]
         action = self.action[random_index]
-        next_action = self.next_action[random_index]
         reward = self.reward[random_index]
         done = self.done[random_index]
 
-        return state, next_state, action, next_action, reward, done
+        return state, next_state, action, reward, done
 
     # check memory content len is greater than size len
     def ready(self, size=32):

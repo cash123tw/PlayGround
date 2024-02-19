@@ -94,8 +94,8 @@ class Agent():
             self.target_net.load_weights(target_path)
             print('load model ...')
 
-    def insert_memory(self,state, next_state, action, next_action, reward, done):
-        self.memory_buffer.add_memory(state, next_state, action, next_action, reward, done)
+    def insert_memory(self,state, next_state, action, reward, done):
+        self.memory_buffer.add_memory(state, next_state, action, reward, done)
 
     def learn(self):
         if not self.memory_buffer.ready(self.batch_size):
@@ -106,7 +106,7 @@ class Agent():
 
         self.learn_counter += 1
 
-        state, next_state, action, next_action, reward, done = self.memory_buffer.sample(self.batch_size)
+        state, next_state, action, reward, done = self.memory_buffer.sample(self.batch_size)
 
         done = np.where(done==1,0,1)
 
@@ -114,11 +114,12 @@ class Agent():
         next_actions = self.target_net(next_state).numpy()
         #Q learn formula : Q(S,A) + lr * [R + gamma * Q max (S',A') - Q(S,A)]
         if self.on_policy:
+            next_action = np.argmax(self.eval_net(next_state),axis=1)
             target = reward + self.gamma * next_actions[index,np.reshape(next_action,(-1,1))] * done
         else:
             target = reward + self.gamma * np.max(next_actions,axis=1,keepdims=True) * done
 
-        y = self.eval_net(state).numpy()
+        y = np.copy(self.eval_net(state).numpy())
         y[index,action.reshape((-1, 1))] = target
 
         self.eval_net.train_on_batch(state,y)
