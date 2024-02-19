@@ -9,7 +9,12 @@ def train(env:gym.Env,epochs, target_learn_rate=100, max_iteration=500,model_sav
     action_size = env.action_space.n
     state_shape = env.observation_space.shape
 
-    agent = Agent([128,128], 0.9, 0.001, action_size, state_shape, epsilon_decay=1e-5,target_learn_rate=target_learn_rate,on_policy=False)
+    agent = Agent([128,128], 0.9, 0.001, action_size, state_shape,memory_size=100000,
+                  batch_size=128, epsilon_decay=1e-3,target_learn_rate=target_learn_rate,on_policy=False)
+
+    reward_history = []
+    avg_reward_history = []
+    epsilon_history = []
 
     for epoch in range(epochs):
 
@@ -17,6 +22,7 @@ def train(env:gym.Env,epochs, target_learn_rate=100, max_iteration=500,model_sav
         total_reward = 0
         state = env.reset()[0]
         action = agent.choose_action(state)
+        prevent_sand_point = False
 
         while max_iteration <= 0 or iter_count < max_iteration:
             iter_count += 1
@@ -31,10 +37,27 @@ def train(env:gym.Env,epochs, target_learn_rate=100, max_iteration=500,model_sav
             state = next_state
             action = next_action
 
-            if done or _:
+
+            if iter_count > 1000 and agent.epsilon == agent.min_epsilon:
+                agent.epsilon = 0.4
+                prevent_sand_point = True
+
+
+            if iter_count % 100 == 0:
+                print(f'\rround {iter_count} epsilon {agent.epsilon}',end='')
+
+            if done:
+                print(f'\r',end='')
+                if prevent_sand_point:
+                    agent.epsilon = agent.min_epsilon
                 break
 
-        print(f'epoch {epoch:>4d} play round {iter_count:>4d} rewards {int(total_reward):>4d} epsilon {agent.epsilon:>4.2f}')
+
+        reward_history.append(total_reward)
+        avg_reward_history.append(np.mean(reward_history[-100:]))
+        epsilon_history.append(agent.epsilon)
+
+        print(f'epoch {epoch:>4d} play round {iter_count:>4d} rewards {int(total_reward):>4d} avg rewards {int(avg_reward_history[-1]):>4d} epsilon {agent.epsilon:>4.2f}')
 
         if model_save_path is not None and epoch != 0 and epoch % model_save_rate == 0:
             agent.save_model(model_save_path,name=save_name)
@@ -42,4 +65,4 @@ def train(env:gym.Env,epochs, target_learn_rate=100, max_iteration=500,model_sav
 if __name__ == '__main__':
     env = gym.make('LunarLander-v2',render_mode='human')
 
-    train(env,200,model_save_path=os.path.join('../../lib/dueling_dqn'),max_iteration=0)
+    train(env,400,model_save_path=os.path.join('../../lib/dueling_dqn'),max_iteration=0)

@@ -64,7 +64,7 @@ class Agent():
         self.min_epsilon = min_epsilon
         self.on_policy = on_policy
 
-        self.lear_counter = 0
+        self.learn_counter = 0
         self.memory_buffer = ReplayBuffer(memory_size,state_size,(action_size,))
 
         self.eval_net = DuelDQN(layer_list,action_size)
@@ -101,10 +101,10 @@ class Agent():
         if not self.memory_buffer.ready(self.batch_size):
             return
 
-        if self.lear_counter % self.target_learn_round == 0:
+        if self.learn_counter % self.target_learn_round == 0:
             self.target_net.set_weights(self.eval_net.get_weights())
 
-        self.lear_counter += 1
+        self.learn_counter += 1
 
         state, next_state, action, next_action, reward, done = self.memory_buffer.sample(self.batch_size)
 
@@ -114,7 +114,7 @@ class Agent():
         next_actions = self.target_net(next_state).numpy()
         #Q learn formula : Q(S,A) + lr * [R + gamma * Q max (S',A') - Q(S,A)]
         if self.on_policy:
-            target = reward + self.gamma * next_actions[index,next_action.reshape(-1,1)] * done
+            target = reward + self.gamma * next_actions[index,np.reshape(next_action,(-1,1))] * done
         else:
             target = reward + self.gamma * np.max(next_actions,axis=1,keepdims=True) * done
 
