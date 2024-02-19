@@ -1,1 +1,3 @@
-lib/dueling_dqn/*
+lib/*
+data/dog_cat/*
+.idea
