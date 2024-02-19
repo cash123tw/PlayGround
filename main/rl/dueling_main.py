@@ -3,6 +3,7 @@ import os.path
 import gym
 import numpy as np
 from dueling_dqn import *
+from main.utils.plot import make_img
 
 
 def train(env:gym.Env,epochs, target_learn_rate=100, max_iteration=500,model_save_rate = 50,model_save_path=None,save_name=''):
@@ -10,7 +11,7 @@ def train(env:gym.Env,epochs, target_learn_rate=100, max_iteration=500,model_sav
     state_shape = env.observation_space.shape
 
     agent = Agent([128,128], 0.9, 0.001, action_size, state_shape,memory_size=100000,
-                  batch_size=128, epsilon_decay=1e-3,target_learn_rate=target_learn_rate,on_policy=False)
+                  batch_size=64, epsilon_decay=1e-3,target_learn_rate=target_learn_rate,on_policy=False)
 
     reward_history = []
     avg_reward_history = []
@@ -37,11 +38,9 @@ def train(env:gym.Env,epochs, target_learn_rate=100, max_iteration=500,model_sav
             state = next_state
             action = next_action
 
-
-            if iter_count > 1000 and agent.epsilon == agent.min_epsilon:
-                agent.epsilon = 0.4
+            if iter_count % 1000 == 0 and agent.epsilon == agent.min_epsilon:
+                agent.epsilon = 0.6
                 prevent_sand_point = True
-
 
             if iter_count % 100 == 0:
                 print(f'\rround {iter_count} epsilon {agent.epsilon}',end='')
@@ -62,7 +61,19 @@ def train(env:gym.Env,epochs, target_learn_rate=100, max_iteration=500,model_sav
         if model_save_path is not None and epoch != 0 and epoch % model_save_rate == 0:
             agent.save_model(model_save_path,name=save_name)
 
-if __name__ == '__main__':
-    env = gym.make('LunarLander-v2',render_mode='human')
+        #save track img
+        if epoch > 0 and epochs//5 and epoch % (epochs//5) == 0:
+            make_img('Track', 'avg_reward', 'epsilon', avg_reward_history, epsilon_history,
+                     show=False, save_path=save_path,save_name=f'{env.unwrapped.spec.id}_{epoch}.jpg')
 
-    train(env,400,model_save_path=os.path.join('../../lib/dueling_dqn'),max_iteration=0)
+    return reward_history,avg_reward_history,epsilon_history
+
+if __name__ == '__main__':
+    game_name = 'LunarLander-v2'
+    save_path = '../../lib/dueling_dqn'
+
+    env = gym.make(game_name, render_mode='human')
+
+    history = train(env, 500, model_save_path=os.path.join(save_path), max_iteration=0)
+
+    make_img('Track','avg_reward','epsilon',history[1],history[2],show = True,save_path=save_path,save_name=f'{game_name}.jpg')
