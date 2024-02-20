@@ -61,17 +61,18 @@ def train(env:gym.Env,epochs, target_learn_rate=100, max_iteration=500,model_sav
 
         #save track img
         if epoch > 0 and epochs//10 and epoch % (epochs//10) == 0:
+            on_policy_mode = ('on' if agent.on_policy else 'off')+'Policy'
             make_img('Track', 'avg_reward', 'epsilon', avg_reward_history, epsilon_history,
-                     show=False, save_path=save_path,save_name=f'{env.unwrapped.spec.id}_{epoch}.jpg')
+                     show=False, save_path=os.getcwd(),save_name=f'duelDQN_{env.unwrapped.spec.id}_{on_policy_mode}_{epoch}.jpg')
 
     return reward_history,avg_reward_history,epsilon_history
 
 if __name__ == '__main__':
     game_name = 'LunarLander-v2'
-    save_path = '../../lib/dueling_dqn'
+    save_path = os.path.join('../../lib/dueling_dqn')
 
     env = gym.make(game_name, render_mode='human')
 
     history = train(env, 350, model_save_path=os.path.join(save_path), max_iteration=0)
 
-    make_img('Track','avg_reward','epsilon',history[1],history[2],show = True,save_path=save_path,save_name=f'{game_name}.jpg')
+    make_img('Track','avg_reward','epsilon',history[1],history[2],show = True)
