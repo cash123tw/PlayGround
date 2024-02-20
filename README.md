@@ -1,6 +1,6 @@
 My AI-related technology exercise and test
 
-Implement model to better understanding theory,and test and compare different model's efficiency and track loss and accuracy,find way to optimize.
+Implement model to better understanding theory,and test and compare different model's efficiency,tracking loss and accuracy change,find way to optimize.
 
 It's contain : 
   1. Reinforcement learn : Duel DQN
